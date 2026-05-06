@@ -15,9 +15,10 @@ Backend service for CloudBucket built with FastAPI. It validates authenticated r
 
 - Validate Supabase JWT from mobile client
 - Authorize bucket/file operations per user context
-- List buckets and files
+- Bucket CRUD (create, list, update metadata, delete)
+- List files and handle file delete operations
 - Generate presigned upload/download URLs
-- Handle controlled delete operations
+- Handle controlled delete operations with policy checks
 
 ## Suggested Folder Structure
 
@@ -77,7 +78,10 @@ uvicorn app.main:app --reload --port 8000
 ## API Targets
 
 - `GET /health`
+- `POST /buckets`
 - `GET /buckets`
+- `PATCH /buckets/{bucket}`
+- `DELETE /buckets/{bucket}`
 - `GET /buckets/{bucket}/files`
 - `POST /files/upload-url`
 - `POST /files/download-url`
@@ -87,6 +91,6 @@ uvicorn app.main:app --reload --port 8000
 
 1. JWT verification and auth dependencies
 2. GCS service abstraction
-3. Bucket and file routes
+3. Bucket CRUD and file routes
 4. Signed URL issuance
 5. Validation, logging, and test coverage
