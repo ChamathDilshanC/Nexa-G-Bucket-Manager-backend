@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+PyJWT
+supabase
+google-cloud-storage
+python-dotenv
+pytest
+httpx
