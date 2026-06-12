@@ -2,6 +2,8 @@
 
 Backend service for CloudBucket built with FastAPI. It validates authenticated requests, integrates with Supabase Storage, and generates signed URLs for secure direct file transfer between mobile clients and Supabase.
 
+**Production URL:** [https://nexa-g-bucket-manager-backend.vercel.app](https://nexa-g-bucket-manager-backend.vercel.app)
+
 ## Tech Stack
 
 - Python 3.10+
@@ -11,6 +13,7 @@ Backend service for CloudBucket built with FastAPI. It validates authenticated r
 - Supabase JWT validation
 - Supabase Google OAuth
 - Supabase Storage SDK
+- Vercel
 
 ## Core Responsibilities
 
@@ -40,10 +43,6 @@ backend/
 │  ├─ db/
 │  │  └─ migrations/
 │  ├─ services/
-│  │  ├─ auth_service.py
-│  │  ├─ bucket_registry.py
-│  │  ├─ supabase_storage.py
-│  │  └─ supabase_client.py
 │  ├─ schemas/
 │  └─ tests/
 ├─ .env.example
@@ -60,32 +59,55 @@ Open the Supabase SQL Editor and run:
 
 `app/db/migrations/001_user_buckets.sql`
 
-This creates the `user_buckets` table that links each authenticated user to the buckets they created.
-
 ### 2. Enable Google Auth
 
 1. Go to Supabase Dashboard → Authentication → Providers
 2. Enable Google
 3. Add your Google OAuth client id and secret
-4. Add this redirect URL:
-   `http://127.0.0.1:8000/auth/callback`
+
+### 3. Redirect URLs
+
+Supabase → Authentication → URL Configuration:
+
+| Field | Value |
+|-------|-------|
+| Site URL | `https://nexa-g-bucket-manager-backend.vercel.app` |
+| Redirect URLs | `https://nexa-g-bucket-manager-backend.vercel.app/auth/callback` |
+| Redirect URLs (local dev) | `http://127.0.0.1:8000/auth/callback` |
+
+GCP Authorized redirect URI (unchanged):
+
+`https://qdmwlxvbcpdsuykhxrja.supabase.co/auth/v1/callback`
 
 ## Environment Variables
 
-Create `.env` from `.env.example`:
+### Vercel Production
+
+Set these in Vercel → Project → Settings → Environment Variables:
 
 ```bash
-APP_ENV=development
+APP_ENV=production
 APP_PORT=8000
-SUPABASE_URL=your_supabase_project_url
+APP_CORS_ORIGINS=*
+
+SUPABASE_URL=https://qdmwlxvbcpdsuykhxrja.supabase.co
 SUPABASE_JWT_SECRET=your_supabase_jwt_secret
 SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-SUPABASE_DEFAULT_BUCKET=optional_default_bucket_name
-GOOGLE_OAUTH_REDIRECT_URL=http://127.0.0.1:8000/auth/callback
+SUPABASE_DEFAULT_BUCKET=nexa-files
+GOOGLE_OAUTH_REDIRECT_URL=https://nexa-g-bucket-manager-backend.vercel.app/auth/callback
+
 SIGNED_URL_EXPIRY_SECONDS=900
 MAX_UPLOAD_SIZE_MB=50
 ALLOWED_MIME_TYPES=image/jpeg,image/png,application/pdf
+```
+
+### Local Development
+
+Create `.env` from `.env.example`. For local OAuth testing, override:
+
+```bash
+GOOGLE_OAUTH_REDIRECT_URL=http://127.0.0.1:8000/auth/callback
 ```
 
 `SUPABASE_SERVICE_ROLE_KEY` is required for server-side bucket and file management. Keep it secret and never expose it to clients.
@@ -99,6 +121,19 @@ python -m venv .venv
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
+
+## Production API
+
+Base URL:
+
+`https://nexa-g-bucket-manager-backend.vercel.app`
+
+Useful links:
+
+- API root: [https://nexa-g-bucket-manager-backend.vercel.app/](https://nexa-g-bucket-manager-backend.vercel.app/)
+- Swagger docs: [https://nexa-g-bucket-manager-backend.vercel.app/docs](https://nexa-g-bucket-manager-backend.vercel.app/docs)
+- System info: [https://nexa-g-bucket-manager-backend.vercel.app/info](https://nexa-g-bucket-manager-backend.vercel.app/info)
+- Google login: [https://nexa-g-bucket-manager-backend.vercel.app/auth/google](https://nexa-g-bucket-manager-backend.vercel.app/auth/google)
 
 ## API Targets
 
@@ -120,10 +155,10 @@ uvicorn app.main:app --reload --port 8000
 
 ## Google Login Flow
 
-1. Client calls `GET /auth/google`
+1. Client calls `GET https://nexa-g-bucket-manager-backend.vercel.app/auth/google`
 2. Open the returned `url` in a browser or WebView
 3. User signs in with Google. Supabase creates the account on first login
-4. Supabase redirects to `/auth/callback?code=...`
+4. Supabase redirects to `https://nexa-g-bucket-manager-backend.vercel.app/auth/callback?code=...`
 5. Backend returns `access_token` and `refresh_token`
 6. Send `Authorization: Bearer <access_token>` on all protected routes
 
