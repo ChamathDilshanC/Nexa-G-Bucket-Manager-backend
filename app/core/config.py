@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
     supabase_default_bucket: str | None = None
-    google_oauth_redirect_url: str = "http://127.0.0.1:8000/auth/callback"
+    google_oauth_redirect_url: str = "https://nexa-g-bucket-manager-backend.vercel.app/auth/callback"
 
     signed_url_expiry_seconds: int = 900
     max_upload_size_mb: int = 50
