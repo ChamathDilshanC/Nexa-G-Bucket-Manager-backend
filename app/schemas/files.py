@@ -34,3 +34,4 @@ class SignedURLResponse(BaseModel):
 
     url: str
     expires_in: int
+    token: str | None = None
