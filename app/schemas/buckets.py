@@ -10,18 +10,26 @@ class BucketCreateRequest(BaseModel):
     """Payload required to create a new bucket."""
 
     name: str = Field(min_length=3, max_length=63)
-    location: str = "US"
+    public: bool = False
+    allowed_mime_types: list[str] | None = None
+    file_size_limit: int | None = Field(default=None, gt=0)
 
 
 class BucketUpdateRequest(BaseModel):
-    """Payload for updating mutable bucket metadata."""
+    """Payload for updating mutable bucket settings."""
 
-    storage_class: str = Field(min_length=2, max_length=32)
+    public: bool | None = None
+    allowed_mime_types: list[str] | None = None
+    file_size_limit: int | None = Field(default=None, gt=0)
 
 
 class BucketResponse(BaseModel):
     """Standardized bucket metadata response model."""
 
     name: str
-    location: str | None = None
-    storage_class: str | None = None
+    display_name: str | None = None
+    public: bool | None = None
+    file_size_limit: int | None = None
+    allowed_mime_types: list[str] | None = None
+    created_at: str | None = None
+    updated_at: str | None = None

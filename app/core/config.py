@@ -12,7 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Centralized runtime configuration loaded from environment variables."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     app_name: str = "Nexa-G-Bucket Manager API"
     app_env: str = "development"
@@ -21,10 +21,10 @@ class Settings(BaseSettings):
 
     supabase_url: str = ""
     supabase_jwt_secret: str = ""
-
-    gcp_project_id: str = ""
-    gcp_default_bucket: str | None = None
-    gcp_service_account_json: str = ""
+    supabase_anon_key: str = ""
+    supabase_service_role_key: str = ""
+    supabase_default_bucket: str | None = None
+    google_oauth_redirect_url: str = "http://127.0.0.1:8000/auth/callback"
 
     signed_url_expiry_seconds: int = 900
     max_upload_size_mb: int = 50

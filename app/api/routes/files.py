@@ -5,9 +5,10 @@ Author: Chamath Dilshan
 
 from fastapi import APIRouter, Depends, status
 
-from app.api.deps import get_current_user, get_storage_service
+from app.api.deps import get_bucket_registry, get_storage_service, get_user_context
 from app.schemas.files import FileListResponse
-from app.services.gcp_storage import GCPStorageService
+from app.services.bucket_registry import BucketRegistry
+from app.services.supabase_storage import SupabaseStorageService
 
 router = APIRouter(prefix="/buckets", tags=["files"])
 
@@ -16,11 +17,12 @@ router = APIRouter(prefix="/buckets", tags=["files"])
 def list_files(
     bucket_name: str,
     prefix: str | None = None,
-    current_user: dict = Depends(get_current_user),
-    storage: GCPStorageService = Depends(get_storage_service),
+    user: dict = Depends(get_user_context),
+    storage: SupabaseStorageService = Depends(get_storage_service),
+    registry: BucketRegistry = Depends(get_bucket_registry),
 ) -> list[FileListResponse]:
-    """List files in a bucket for the authenticated user."""
-    _ = current_user
+    """List files in a user-owned bucket."""
+    registry.require_bucket_access(user["user_id"], bucket_name)
     files = storage.list_files(bucket_name=bucket_name, prefix=prefix)
     return [FileListResponse(**item) for item in files]
 
@@ -29,9 +31,10 @@ def list_files(
 def delete_file(
     bucket_name: str,
     object_path: str,
-    current_user: dict = Depends(get_current_user),
-    storage: GCPStorageService = Depends(get_storage_service),
+    user: dict = Depends(get_user_context),
+    storage: SupabaseStorageService = Depends(get_storage_service),
+    registry: BucketRegistry = Depends(get_bucket_registry),
 ) -> None:
-    """Delete a single file object from the specified bucket."""
-    _ = current_user
+    """Delete a single file object from a user-owned bucket."""
+    registry.require_bucket_access(user["user_id"], bucket_name)
     storage.delete_file(bucket_name=bucket_name, object_path=object_path)
