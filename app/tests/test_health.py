@@ -8,20 +8,23 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
-def test_root_pretty_prints_json_for_browser_requests() -> None:
-    """Verify browser requests receive indented JSON in development."""
+def test_root_renders_clickable_html_for_browser_requests() -> None:
+    """Verify browser requests receive an HTML page with clickable endpoint links."""
     client = TestClient(app)
     response = client.get("/", headers={"accept": "text/html"})
 
     assert response.status_code == 200
-    assert "\n" in response.text
-    assert '  "name"' in response.text
+    assert "text/html" in response.headers["content-type"]
+    assert 'href="http://testserver/health"' in response.text
+    assert 'target="_blank"' in response.text
+    assert "/health" in response.text
+    assert "API Endpoints" in response.text
 
 
-def test_root_returns_api_links() -> None:
-    """Verify the root endpoint exposes rich discovery metadata."""
+def test_root_returns_json_for_api_clients() -> None:
+    """Verify API clients still receive JSON discovery metadata."""
     client = TestClient(app)
-    response = client.get("/")
+    response = client.get("/", headers={"accept": "application/json"})
 
     assert response.status_code == 200
     payload = response.json()
