@@ -20,6 +20,7 @@ class UploadSignedURLRequest(BaseModel):
     bucket: str = Field(min_length=3, max_length=63)
     path: str = Field(min_length=1)
     content_type: str = Field(min_length=3, max_length=128)
+    file_size_bytes: int | None = Field(default=None, gt=0)
 
 
 class DownloadSignedURLRequest(BaseModel):

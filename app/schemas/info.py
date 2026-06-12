@@ -58,6 +58,13 @@ class SettingsInfo(BaseModel):
     allowed_mime_types: list[str]
 
 
+class DatabaseInfo(BaseModel):
+    """Database migration and ownership table readiness."""
+
+    user_buckets_table_ready: bool
+    error: str | None = None
+
+
 class SystemInfoResponse(BaseModel):
     """Full system status payload for monitoring and debugging."""
 
@@ -65,6 +72,7 @@ class SystemInfoResponse(BaseModel):
     app: AppInfo
     supabase: SupabaseInfo
     storage: StorageInfo
+    database: DatabaseInfo
     settings: SettingsInfo
 
 

@@ -86,6 +86,13 @@ def build_root_response(base_url: str) -> RootResponse:
         ),
         _api_link(
             base_url,
+            name="Refresh Session",
+            method="POST",
+            path="/auth/refresh",
+            description="Refresh an expired access token using a Supabase refresh token.",
+        ),
+        _api_link(
+            base_url,
             name="List Buckets",
             method="GET",
             path="/buckets",

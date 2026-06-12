@@ -55,14 +55,38 @@ class AuthService:
             )
 
         user = response.user or response.session.user
+        return self._session_to_dict(response)
+
+    def refresh_session(self, refresh_token: str) -> dict[str, Any]:
+        """Refresh an expired access token using a Supabase refresh token."""
+        client = get_supabase_auth_client()
+        response = client.auth.refresh_session(refresh_token)
+
+        if not response.session:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Unable to refresh session with the provided refresh token.",
+            )
+
+        return self._session_to_dict(response)
+
+    @staticmethod
+    def _session_to_dict(response: Any) -> dict[str, Any]:
+        """Normalize a Supabase auth response into an API session payload."""
+        session = response.session
+        user = response.user or (session.user if session else None)
+        provider = None
+        if user and user.app_metadata:
+            provider = user.app_metadata.get("provider")
+
         return {
-            "access_token": response.session.access_token,
-            "refresh_token": response.session.refresh_token,
-            "expires_in": response.session.expires_in,
+            "access_token": session.access_token,
+            "refresh_token": session.refresh_token,
+            "expires_in": session.expires_in,
             "token_type": "bearer",
             "user": {
                 "id": user.id if user else None,
                 "email": user.email if user else None,
-                "provider": "google",
+                "provider": provider or "google",
             },
         }

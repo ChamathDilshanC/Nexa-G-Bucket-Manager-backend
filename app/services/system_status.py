@@ -96,9 +96,34 @@ def _check_storage(settings: Settings, supabase_connected: bool) -> dict[str, An
     return info
 
 
-def _resolve_status(supabase: dict[str, Any], storage: dict[str, Any]) -> str:
+def _check_database(supabase_connected: bool) -> dict[str, Any]:
+    """Verify the user bucket ownership table is available."""
+    info: dict[str, Any] = {
+        "user_buckets_table_ready": False,
+        "error": None,
+    }
+
+    if not supabase_connected:
+        info["error"] = "Database checks are unavailable because Supabase is not connected."
+        return info
+
+    try:
+        client = get_supabase_admin_client()
+        client.table("user_buckets").select("id").limit(1).execute()
+        info["user_buckets_table_ready"] = True
+    except Exception as exc:  # pragma: no cover - provider-specific failures
+        info["error"] = str(exc)
+
+    return info
+
+
+def _resolve_status(
+    supabase: dict[str, Any],
+    storage: dict[str, Any],
+    database: dict[str, Any],
+) -> str:
     """Derive an overall health status from component checks."""
-    if supabase["connected"] and storage["connected"]:
+    if supabase["connected"] and storage["connected"] and database["user_buckets_table_ready"]:
         if storage["default_bucket_configured"] and not storage["default_bucket_exists"]:
             return "degraded"
         return "ok"
@@ -112,9 +137,10 @@ def get_system_info() -> dict[str, Any]:
     settings = get_settings()
     supabase = _check_supabase(settings)
     storage = _check_storage(settings, supabase_connected=supabase["connected"])
+    database = _check_database(supabase_connected=supabase["connected"])
 
     return {
-        "status": _resolve_status(supabase, storage),
+        "status": _resolve_status(supabase, storage, database),
         "app": {
             "name": settings.app_name,
             "env": settings.app_env,
@@ -122,6 +148,7 @@ def get_system_info() -> dict[str, Any]:
         },
         "supabase": supabase,
         "storage": storage,
+        "database": database,
         "settings": {
             "signed_url_expiry_seconds": settings.signed_url_expiry_seconds,
             "max_upload_size_mb": settings.max_upload_size_mb,
