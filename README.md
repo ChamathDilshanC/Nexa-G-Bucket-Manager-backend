@@ -144,6 +144,7 @@ Useful links:
 - `GET /auth/callback?code=...` — Exchange OAuth code for JWT session
 - `POST /auth/callback` — Exchange OAuth code from mobile/web clients
 - `GET /auth/me` — Current authenticated user profile
+- `POST /auth/refresh` — Refresh an expired access token
 - `POST /buckets` — Create another bucket for the logged-in user
 - `GET /buckets` — List only the current user's buckets
 - `PATCH /buckets/{bucket}`

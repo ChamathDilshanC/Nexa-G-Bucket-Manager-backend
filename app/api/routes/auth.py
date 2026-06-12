@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Query
 from app.api.deps import get_user_context
 from app.schemas.auth import (
     AuthCallbackRequest,
+    AuthRefreshRequest,
     AuthSessionResponse,
     AuthUserResponse,
     GoogleAuthResponse,
@@ -35,6 +36,13 @@ def google_auth_callback(code: str = Query(min_length=8)) -> AuthSessionResponse
 def exchange_google_auth_code(payload: AuthCallbackRequest) -> AuthSessionResponse:
     """Exchange a Google OAuth code for Supabase access and refresh tokens."""
     session = AuthService().exchange_auth_code(auth_code=payload.code)
+    return AuthSessionResponse(**session)
+
+
+@router.post("/refresh", response_model=AuthSessionResponse)
+def refresh_auth_session(payload: AuthRefreshRequest) -> AuthSessionResponse:
+    """Refresh an expired access token using a valid refresh token."""
+    session = AuthService().refresh_session(payload.refresh_token)
     return AuthSessionResponse(**session)
 
 

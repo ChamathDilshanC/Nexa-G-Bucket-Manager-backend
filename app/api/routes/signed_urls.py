@@ -35,6 +35,13 @@ def create_upload_signed_url(
             detail=f"Unsupported MIME type. Allowed: {sorted(settings.parsed_allowed_mime_types)}",
         )
 
+    max_upload_bytes = settings.max_upload_size_mb * 1024 * 1024
+    if payload.file_size_bytes is not None and payload.file_size_bytes > max_upload_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File exceeds the maximum upload size of {settings.max_upload_size_mb} MB.",
+        )
+
     signed = storage.generate_upload_signed_url(
         bucket_name=payload.bucket,
         object_path=payload.path,

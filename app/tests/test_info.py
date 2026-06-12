@@ -20,7 +20,9 @@ def test_info_endpoint_returns_expected_sections() -> None:
     assert "app" in payload
     assert "supabase" in payload
     assert "storage" in payload
+    assert "database" in payload
     assert "settings" in payload
+    assert "user_buckets_table_ready" in payload["database"]
 
     assert payload["app"]["name"]
     assert "configured" in payload["supabase"]

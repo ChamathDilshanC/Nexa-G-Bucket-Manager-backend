@@ -29,6 +29,12 @@ class AuthUserResponse(BaseModel):
     is_google_user: bool = False
 
 
+class AuthRefreshRequest(BaseModel):
+    """Payload used to refresh an expired access token."""
+
+    refresh_token: str = Field(min_length=20)
+
+
 class AuthSessionResponse(BaseModel):
     """Session tokens returned after Google OAuth callback."""
 
