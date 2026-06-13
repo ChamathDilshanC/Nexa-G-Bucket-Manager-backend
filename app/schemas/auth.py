@@ -32,7 +32,7 @@ class AuthUserResponse(BaseModel):
 class AuthRefreshRequest(BaseModel):
     """Payload used to refresh an expired access token."""
 
-    refresh_token: str = Field(min_length=20)
+    refresh_token: str = Field(min_length=8)
 
 
 class AuthSessionResponse(BaseModel):
