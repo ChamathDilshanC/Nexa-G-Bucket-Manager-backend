@@ -79,22 +79,38 @@ class SupabaseStorageService:
         self.client.storage.delete_bucket(name)
 
     def list_files(self, bucket_name: str, prefix: str | None = None) -> list[dict[str, Any]]:
-        """List files in a bucket with optional path prefix filtering."""
-        items = self.client.storage.from_(bucket_name).list(path=prefix or "")
-        files: list[dict[str, Any]] = []
-        for item in items:
-            metadata = item.get("metadata") or {}
-            if metadata.get("size") is None and item.get("id") is None:
-                continue
-            files.append(
-                {
-                    "name": item["name"],
-                    "size": metadata.get("size"),
-                    "content_type": metadata.get("mimetype"),
-                    "updated": item.get("updated_at"),
-                }
-            )
-        return files
+        """List files in a bucket, including nested folders."""
+
+        def walk(folder_path: str) -> list[dict[str, Any]]:
+            items = self.client.storage.from_(bucket_name).list(path=folder_path)
+            files: list[dict[str, Any]] = []
+
+            for item in items:
+                name = item.get("name")
+                if not name:
+                    continue
+
+                metadata = item.get("metadata") or {}
+                full_path = f"{folder_path}/{name}" if folder_path else name
+                is_folder = metadata.get("size") is None and item.get("id") is None
+
+                if is_folder:
+                    files.extend(walk(full_path))
+                    continue
+
+                files.append(
+                    {
+                        "name": full_path,
+                        "size": metadata.get("size"),
+                        "content_type": metadata.get("mimetype"),
+                        "updated": item.get("updated_at"),
+                    }
+                )
+
+            return files
+
+        root = (prefix or "").strip("/")
+        return walk(root)
 
     def delete_file(self, bucket_name: str, object_path: str) -> None:
         """Delete a single object from the specified bucket."""
