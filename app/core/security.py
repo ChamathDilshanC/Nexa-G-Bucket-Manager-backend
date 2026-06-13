@@ -4,30 +4,59 @@ Author: Chamath Dilshan
 """
 
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any
 
 import jwt
 from fastapi import HTTPException, status
-from jwt import InvalidTokenError
+from jwt import InvalidTokenError, PyJWKClient
 
 from app.core.config import get_settings
+
+
+@lru_cache
+def get_jwks_client(supabase_url: str) -> PyJWKClient:
+    """Create a cached JWKS client for Supabase asymmetric JWT verification."""
+    jwks_url = f"{supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+    return PyJWKClient(jwks_url, cache_keys=True)
 
 
 def decode_supabase_jwt(token: str) -> dict[str, Any]:
     """Validate a Supabase JWT and return its decoded claims."""
     settings = get_settings()
-    if not settings.supabase_jwt_secret:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="SUPABASE_JWT_SECRET is not configured on the server.",
-        )
+
     try:
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            options={"verify_aud": False},
-        )
+        header = jwt.get_unverified_header(token)
+        algorithm = header.get("alg", "HS256")
+
+        if algorithm == "HS256":
+            if not settings.supabase_jwt_secret:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="SUPABASE_JWT_SECRET is not configured on the server.",
+                )
+            payload = jwt.decode(
+                token,
+                settings.supabase_jwt_secret,
+                algorithms=["HS256"],
+                options={"verify_aud": False},
+            )
+        elif algorithm in {"ES256", "RS256"}:
+            if not settings.supabase_url:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="SUPABASE_URL is not configured on the server.",
+                )
+            signing_key = get_jwks_client(settings.supabase_url).get_signing_key_from_jwt(token)
+            payload = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=[algorithm],
+                options={"verify_aud": False},
+                leeway=10,
+            )
+        else:
+            raise InvalidTokenError(f"Unsupported JWT algorithm: {algorithm}")
     except InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
