@@ -112,6 +112,33 @@ class SupabaseStorageService:
         root = (prefix or "").strip("/")
         return walk(root)
 
+    def count_files(self, bucket_name: str, prefix: str | None = None) -> int:
+        """Count files in a bucket, including nested folders."""
+
+        def walk(folder_path: str) -> int:
+            items = self.client.storage.from_(bucket_name).list(path=folder_path)
+            total = 0
+
+            for item in items:
+                name = item.get("name")
+                if not name:
+                    continue
+
+                metadata = item.get("metadata") or {}
+                full_path = f"{folder_path}/{name}" if folder_path else name
+                is_folder = metadata.get("size") is None and item.get("id") is None
+
+                if is_folder:
+                    total += walk(full_path)
+                    continue
+
+                total += 1
+
+            return total
+
+        root = (prefix or "").strip("/")
+        return walk(root)
+
     def delete_file(self, bucket_name: str, object_path: str) -> None:
         """Delete a single object from the specified bucket."""
         self.client.storage.from_(bucket_name).remove([object_path])
