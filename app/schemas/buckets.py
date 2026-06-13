@@ -31,5 +31,6 @@ class BucketResponse(BaseModel):
     public: bool | None = None
     file_size_limit: int | None = None
     allowed_mime_types: list[str] | None = None
+    file_count: int | None = None
     created_at: str | None = None
     updated_at: str | None = None

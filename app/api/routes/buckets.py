@@ -18,6 +18,7 @@ def _to_bucket_response(
     *,
     display_name: str | None = None,
     created_at: str | None = None,
+    file_count: int | None = None,
 ) -> BucketResponse:
     """Merge storage metadata with registry metadata."""
     return BucketResponse(
@@ -26,6 +27,7 @@ def _to_bucket_response(
         public=storage_bucket.get("public"),
         file_size_limit=storage_bucket.get("file_size_limit"),
         allowed_mime_types=storage_bucket.get("allowed_mime_types"),
+        file_count=file_count,
         created_at=created_at or storage_bucket.get("created_at"),
         updated_at=storage_bucket.get("updated_at"),
     )
@@ -44,11 +46,13 @@ def list_buckets(
     for owned in owned_buckets:
         try:
             metadata = storage.get_bucket(owned["bucket_name"])
+            file_count = storage.count_files(owned["bucket_name"])
             responses.append(
                 _to_bucket_response(
                     metadata,
                     display_name=owned["display_name"],
                     created_at=owned.get("created_at"),
+                    file_count=file_count,
                 )
             )
         except Exception:  # pragma: no cover - provider-specific failures
@@ -57,6 +61,7 @@ def list_buckets(
                     name=owned["bucket_name"],
                     display_name=owned["display_name"],
                     created_at=owned.get("created_at"),
+                    file_count=0,
                 )
             )
 
