@@ -17,6 +17,7 @@ class AuthCallbackRequest(BaseModel):
     """Payload used to exchange an OAuth callback code for a session."""
 
     code: str = Field(min_length=8)
+    redirect_to: str | None = None
 
 
 class AuthUserResponse(BaseModel):

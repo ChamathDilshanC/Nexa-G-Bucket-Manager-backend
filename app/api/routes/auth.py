@@ -35,7 +35,10 @@ def google_auth_callback(code: str = Query(min_length=8)) -> AuthSessionResponse
 @router.post("/callback", response_model=AuthSessionResponse)
 def exchange_google_auth_code(payload: AuthCallbackRequest) -> AuthSessionResponse:
     """Exchange a Google OAuth code for Supabase access and refresh tokens."""
-    session = AuthService().exchange_auth_code(auth_code=payload.code)
+    session = AuthService().exchange_auth_code(
+        auth_code=payload.code,
+        redirect_to=payload.redirect_to,
+    )
     return AuthSessionResponse(**session)
 
 
