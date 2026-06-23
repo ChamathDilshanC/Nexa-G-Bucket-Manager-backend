@@ -10,6 +10,7 @@ from app.api.routes.auth import router as auth_router
 from app.api.routes.buckets import router as buckets_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
+from app.api.routes.shares import router as shares_router
 from app.api.routes.signed_urls import router as signed_urls_router
 from app.core.config import get_settings
 from app.core.logging import configure_logging
@@ -34,3 +35,4 @@ app.include_router(auth_router)
 app.include_router(buckets_router)
 app.include_router(files_router)
 app.include_router(signed_urls_router)
+app.include_router(shares_router)
